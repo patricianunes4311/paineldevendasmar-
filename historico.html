@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="./CSS/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <title>Histórico de vendas - Mar.é Semi jóias</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-rose" aria-label="Navegação principal">
+        <div class="container-fluid">
+            <img src="./Images/logosemfundo.png" alt="Logo Mar.é Semi jóias" class="logo me-2">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+                aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Abrir menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="./vendas.html">Painel de vendas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Histórico</a>
+                    </li>
+                </ul>
+                <div class="d-flex mt-3 mt-lg-0">
+                    <button id="logoutButton" class="btn btn-outline-gold btn-sm">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="hero-section" aria-label="Histórico de vendas">
+            <div class="hero-text">
+                <p class="eyebrow">Histórico</p>
+                <h1>Registro completo das vendas realizadas</h1>
+                <p>Confira todas as vendas já cadastradas, com datas, valores e lucro calculado automaticamente.</p>
+            </div>
+            <div class="card-glow">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <small>Vendas registradas</small>
+                        <strong id="historyCount">0</strong>
+                    </div>
+                    <div class="summary-card">
+                        <small>Lucro total</small>
+                        <strong id="historyProfit">R$ 0,00</strong>
+                    </div>
+                    <div class="summary-card">
+                        <small>Itens totais</small>
+                        <strong id="historyItems">0</strong>
+                    </div>
+                </div>
+                <div class="hero-note">
+                    <p>Use esta página para consultar o seu histórico completo de vendas ou apagar o histórico quando quiser começar uma nova temporada.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="sales-section" aria-label="Tabela de histórico de vendas">
+            <div class="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <h2>Histórico de vendas</h2>
+                    <p>Os registros são carregados automaticamente do painel de vendas.</p>
+                </div>
+                <button id="clearHistoryButton" type="button" class="btn btn-outline-gold">Limpar histórico</button>
+            </div>
+
+            <div class="table-responsive glass-panel">
+                <table class="table table-borderless align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Pagamento</th>
+                            <th class="text-end">Qtd.</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Lucro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Nenhuma venda registrada ainda.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const CLOSED_STORAGE_KEY = 'mareClosedSales';
+        const AUTH_KEY = 'mareLoggedIn';
+        const historyTableBody = document.getElementById('historyTableBody');
+        const historyCount = document.getElementById('historyCount');
+        const historyProfit = document.getElementById('historyProfit');
+        const historyItems = document.getElementById('historyItems');
+        const clearHistoryButton = document.getElementById('clearHistoryButton');
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function loadHistory() {
+            if (!localStorage.getItem(AUTH_KEY)) {
+                window.location.href = './login.html';
+                return;
+            }
+            const stored = localStorage.getItem(CLOSED_STORAGE_KEY);
+            const sales = stored ? JSON.parse(stored) : [];
+            renderHistory(sales);
+        }
+
+        function renderHistory(sales) {
+            historyTableBody.innerHTML = '';
+            if (sales.length === 0) {
+                historyTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma venda registrada ainda.</td></tr>';
+                historyCount.textContent = '0';
+                historyProfit.textContent = 'R$ 0,00';
+                historyItems.textContent = '0';
+                return;
+            }
+
+            const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
+            const totalQuantity = sales.reduce((sum, sale) => sum + sale.quantity, 0);
+
+            const sortedSales = [...sales].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            sortedSales.forEach(sale => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(sale.createdAt)}</td>
+                    <td>${sale.client}</td>
+                    <td>${sale.product}</td>
+                    <td>${sale.payment || '—'}</td>
+                    <td class="text-end">${sale.quantity}</td>
+                    <td class="text-end">${formatCurrency(sale.total)}</td>
+                    <td class="text-end text-gold">${formatCurrency(sale.profit)}</td>
+                `;
+                historyTableBody.appendChild(row);
+            });
+
+            historyCount.textContent = String(sales.length);
+            historyProfit.textContent = formatCurrency(totalProfit);
+            historyItems.textContent = String(totalQuantity);
+        }
+
+        clearHistoryButton.addEventListener('click', () => {
+            if (!confirm('Tem certeza que deseja apagar todo o histórico de vendas?')) return;
+            localStorage.removeItem(CLOSED_STORAGE_KEY);
+            loadHistory();
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem(AUTH_KEY);
+            window.location.href = './login.html';
+        });
+
+        window.addEventListener('load', loadHistory);
+    </script>
+</body>
+
+</html>

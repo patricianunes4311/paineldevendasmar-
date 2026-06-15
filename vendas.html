@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="./CSS/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <title>Mar.é Semi jóias</title>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-rose" aria-label="Navegação principal">
+        <div class="container-fluid">
+            <img src="./Images/logosemfundo.png" alt="Logo Mar.é Semi jóias" class="logo me-2">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+                aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Abrir menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Página Inicial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./historico.html">Histórico</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./dashboard.html">Dashboard</a>
+                    </li>
+                </ul>
+                <div class="d-flex mt-3 mt-lg-0">
+                    <button id="logoutButton" class="btn btn-outline-gold btn-sm">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="hero-section" aria-label="Apresentação do sistema de vendas">
+            <div class="hero-text">
+                <p class="eyebrow">Painel de vendas</p>
+            </div>
+            <div class="card-glow">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <small>Total de vendas</small>
+                        <strong id="summarySales">0</strong>
+                    </div>
+                    <div class="summary-card">
+                        <small>Lucro acumulado</small>
+                        <strong id="summaryProfit">R$ 0,00</strong>
+                    </div>
+                    <div class="summary-card">
+                        <small>Ticket médio</small>
+                        <strong id="summaryAverage">R$ 0,00</strong>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="sales-section" aria-label="Registro de vendas do painel">
+            <div class="filter-bar">
+                <div class="input-group">
+                    <span class="input-group-text">Filtrar</span>
+                    <input id="filterInput" type="search" class="form-control" placeholder="Buscar cliente, produto ou pagamento">
+                    <button type="button" class="btn btn-outline-gold" id="clearFilterButton">Limpar</button>
+                </div>
+                <div class="sort-group gap-2 d-flex flex-wrap align-items-center">
+                    <select id="paymentFilter" class="form-select">
+                        <option value="all">Todos os pagamentos</option>
+                        <option value="À vista">À vista</option>
+                        <option value="À prazo">À prazo</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão débito">Cartão débito</option>
+                        <option value="Cartão crédito">Cartão crédito</option>
+                    </select>
+                    <select id="sortSelect" class="form-select">
+                        <option value="date">Ordenar por mais recente</option>
+                        <option value="total">Ordenar por maior total</option>
+                        <option value="profit">Ordenar por maior lucro</option>
+                    </select>
+                </div>
+                <small id="visibleCount" class="text-muted">Exibindo 0 de 0 vendas</small>
+            </div>
+            <div class="period-report card-glow">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="reportStart" class="form-label">Data inicial</label>
+                        <input id="reportStart" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="reportEnd" class="form-label">Data final</label>
+                        <input id="reportEnd" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button id="generateReportButton" type="button" class="btn btn-outline-gold w-100">Gerar relatório</button>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button id="closeMonthButton" type="button" class="btn btn-outline-gold w-100">Fechar mês</button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 text-muted small">Quando fechar o mês, as vendas ativas serão movidas para o histórico.</div>
+                </div>
+                <div class="period-summary">
+                    <div class="summary-card small-card">
+                        <small>Vendas no período</small>
+                        <strong id="periodSales">0</strong>
+                    </div>
+                    <div class="summary-card small-card">
+                        <small>Lucro no período</small>
+                        <strong id="periodProfit">R$ 0,00</strong>
+                    </div>
+                    <div class="summary-card small-card">
+                        <small>Itens no período</small>
+                        <strong id="periodItems">0</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="section-header">
+                <h2>Registro de vendas</h2>
+                <p>Preencha os dados do cliente e do produto para calcular o lucro de 35% automaticamente.</p>
+            </div>
+
+            <div class="row gy-4">
+                <div class="col-lg-5">
+                    <form id="salesForm" class="sales-form" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="clientName" class="form-label">Nome do cliente</label>
+                            <input type="text" id="clientName" class="form-control" placeholder="Ex: Ana Silva" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="productName" class="form-label">Produto</label>
+                            <input type="text" id="productName" class="form-control" placeholder="Ex: Brinco de pérola" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="costPrice" class="form-label">Custo unitário (opcional)</label>
+                            <input type="number" id="costPrice" class="form-control" min="0" step="0.01" placeholder="0,00">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentType" class="form-label">Categoria de pagamento</label>
+                            <select id="paymentType" class="form-select" required>
+                                <option value="À vista">À vista</option>
+                                <option value="À prazo">À prazo</option>
+                                <option value="Pix">Pix</option>
+                                <option value="Cartão débito">Cartão débito</option>
+                                <option value="Cartão crédito">Cartão crédito</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label for="salePrice" class="form-label">Valor unitário</label>
+                                <input type="number" id="salePrice" class="form-control" min="0" step="0.01" placeholder="0,00" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="quantity" class="form-label">Quantidade</label>
+                                <input type="number" id="quantity" class="form-control" min="1" step="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="sales-info">
+                                <label>Total da venda</label>
+                                <span id="saleTotal">R$ 0,00</span>
+                            </div>
+                            <div class="sales-info">
+                                <label>Lucro 35%</label>
+                                <span id="saleProfit">R$ 0,00</span>
+                            </div>
+                            <div class="sales-info">
+                                <label>Margem real</label>
+                                <span id="saleMargin">35%</span>
+                            </div>
+                        </div>
+                        <div id="profitWarning" class="alert alert-warning py-2 d-none" role="alert">
+                            A margem está abaixo de 35%. Reveja o preço ou o custo para manter a meta.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-rose w-100" id="addSaleButton">Adicionar venda</button>
+                            <button type="button" class="btn btn-outline-gold w-100 d-none" id="cancelEditButton">Cancelar edição</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="table-responsive glass-panel">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Produto</th>
+                                    <th>Pagamento</th>
+                                    <th class="text-end">Qtd.</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Lucro</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Nenhuma venda registrada ainda.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <script>
+        const STORAGE_KEY = 'mareSalesRecords';
+        const CLOSED_STORAGE_KEY = 'mareClosedSales';
+        const filterInput = document.getElementById('filterInput');
+        const paymentFilter = document.getElementById('paymentFilter');
+        const clearFilterButton = document.getElementById('clearFilterButton');
+        const visibleCount = document.getElementById('visibleCount');
+        const cancelEditButton = document.getElementById('cancelEditButton');
+
+        const AUTH_KEY = 'mareLoggedIn';
+        const salesForm = document.getElementById('salesForm');
+        const clientNameField = document.getElementById('clientName');
+        const productNameField = document.getElementById('productName');
+        const costPriceField = document.getElementById('costPrice');
+        const paymentTypeField = document.getElementById('paymentType');
+        const salePriceField = document.getElementById('salePrice');
+        const quantityField = document.getElementById('quantity');
+        const saleTotalField = document.getElementById('saleTotal');
+        const saleProfitField = document.getElementById('saleProfit');
+        const saleMarginField = document.getElementById('saleMargin');
+        const profitWarning = document.getElementById('profitWarning');
+        const reportStart = document.getElementById('reportStart');
+        const reportEnd = document.getElementById('reportEnd');
+        const generateReportButton = document.getElementById('generateReportButton');
+        const closeMonthButton = document.getElementById('closeMonthButton');
+        const periodSales = document.getElementById('periodSales');
+        const periodProfit = document.getElementById('periodProfit');
+        const periodItems = document.getElementById('periodItems');
+        const logoutButton = document.getElementById('logoutButton');
+        const sortSelect = document.getElementById('sortSelect');
+        const toastContainer = document.getElementById('toastContainer');
+
+        const salesTableBody = document.getElementById('salesTableBody');
+        const summarySales = document.getElementById('summarySales');
+        const summaryProfit = document.getElementById('summaryProfit');
+        const summaryAverage = document.getElementById('summaryAverage');
+        const addSaleButton = document.getElementById('addSaleButton');
+
+        let sales = [];
+        let visibleSales = [];
+        let editIndex = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function calculateSaleValues() {
+            const price = parseFloat(salePriceField.value.replace(',', '.')) || 0;
+            const cost = parseFloat(costPriceField.value.replace(',', '.')) || 0;
+            const quantity = parseInt(quantityField.value, 10) || 0;
+            const total = price * quantity;
+            const revenueProfit = total * 0.35;
+            const costTotal = cost * quantity;
+            const profit = cost > 0 ? total - costTotal : revenueProfit;
+            const margin = cost > 0 && costTotal > 0 ? (profit / costTotal) * 100 : 35;
+
+            saleTotalField.textContent = formatCurrency(total);
+            saleProfitField.textContent = formatCurrency(profit);
+            saleMarginField.textContent = `${margin.toFixed(1)}%`;
+            profitWarning.classList.toggle('d-none', margin >= 35 || costTotal === 0);
+
+            return { total, profit, margin };
+        }
+
+        function saveSales() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+        }
+
+        function saveClosedSales(closedSales) {
+            localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(closedSales));
+        }
+
+        function loadSales() {
+            if (!localStorage.getItem(AUTH_KEY)) {
+                window.location.href = './login.html';
+                return;
+            }
+            const stored = localStorage.getItem(STORAGE_KEY);
+            sales = stored ? JSON.parse(stored) : [];
+            applyFilter();
+        }
+
+        function updateSummary() {
+            const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
+            const totalSalesValue = sales.reduce((sum, sale) => sum + sale.total, 0);
+
+            summarySales.textContent = String(sales.length);
+            summaryProfit.textContent = formatCurrency(totalProfit);
+            summaryAverage.textContent = sales.length ? formatCurrency(totalSalesValue / sales.length) : 'R$ 0,00';
+        }
+
+        function updateVisibleCount() {
+            visibleCount.textContent = `Exibindo ${visibleSales.length} de ${sales.length} vendas`;
+        }
+
+        function sortVisibleSales() {
+            visibleSales.sort((a, b) => {
+                if (sortSelect.value === 'total') {
+                    return b.total - a.total;
+                }
+                if (sortSelect.value === 'profit') {
+                    return b.profit - a.profit;
+                }
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+        }
+
+        function applyFilter() {
+            const query = filterInput.value.trim().toLowerCase();
+            const payment = paymentFilter.value;
+            visibleSales = sales.filter(sale => {
+                const matchesQuery = query === '' || sale.client.toLowerCase().includes(query) || sale.product.toLowerCase().includes(query) || sale.payment.toLowerCase().includes(query);
+                const matchesPayment = payment === 'all' || sale.payment === payment;
+                return matchesQuery && matchesPayment;
+            });
+            sortVisibleSales();
+            renderSales();
+        }
+
+
+        function generatePeriodReport() {
+            const start = reportStart.value ? new Date(reportStart.value) : null;
+            const end = reportEnd.value ? new Date(reportEnd.value) : null;
+            if (start && end && start > end) {
+                showToast('A data inicial não pode ser posterior à data final.', 'danger');
+                return;
+            }
+
+            const filtered = sales.filter(sale => {
+                const saleDate = new Date(sale.createdAt);
+                if (start && saleDate < start) return false;
+                if (end) {
+                    const endDate = new Date(end);
+                    endDate.setHours(23, 59, 59, 999);
+                    if (saleDate > endDate) return false;
+                }
+                return true;
+            });
+
+            const totalProfit = filtered.reduce((sum, sale) => sum + sale.profit, 0);
+            const totalQuantity = filtered.reduce((sum, sale) => sum + sale.quantity, 0);
+
+            periodSales.textContent = String(filtered.length);
+            periodProfit.textContent = formatCurrency(totalProfit);
+            periodItems.textContent = String(totalQuantity);
+            showToast('Relatório por período gerado', 'success');
+        }
+
+        function showToast(message, variant = 'success') {
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
+            toastEl.role = 'alert';
+            toastEl.ariaLive = 'assertive';
+            toastEl.ariaAtomic = 'true';
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+                </div>
+            `;
+            toastContainer.appendChild(toastEl);
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 2500 });
+            bsToast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+
+        function renderSales() {
+            salesTableBody.innerHTML = '';
+            if (visibleSales.length === 0) {
+                const message = sales.length === 0 ? 'Nenhuma venda registrada ainda.' : 'Nenhuma venda encontrada para o filtro.';
+                salesTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${message}</td></tr>`;
+            } else {
+                visibleSales.forEach(sale => {
+                    const saleIndex = sales.findIndex(item => item.createdAt === sale.createdAt);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sale.client}</td>
+                        <td>${sale.product}</td>
+                        <td>${sale.payment}</td>
+                        <td class="text-end">${sale.quantity}</td>
+                        <td class="text-end">${formatCurrency(sale.total)}</td>
+                        <td class="text-end text-gold">${formatCurrency(sale.profit)}</td>
+                        <td class="text-end actions-cell">
+                            <button type="button" class="btn btn-sm action-button action-edit me-2">Editar</button>
+                            <button type="button" class="btn btn-sm action-button action-delete">Excluir</button>
+                        </td>
+                    `;
+
+                    row.querySelector('.action-edit').addEventListener('click', () => startEditSale(saleIndex));
+                    row.querySelector('.action-delete').addEventListener('click', () => deleteSale(saleIndex));
+                    salesTableBody.appendChild(row);
+                });
+            }
+
+            updateSummary();
+            updateVisibleCount();
+        }
+
+        function resetForm() {
+            editIndex = null;
+            salesForm.reset();
+            quantityField.value = '1';
+            calculateSaleValues();
+            addSaleButton.textContent = 'Adicionar venda';
+            cancelEditButton.classList.add('d-none');
+        }
+
+        function startEditSale(index) {
+            const sale = sales[index];
+            clientNameField.value = sale.client;
+            productNameField.value = sale.product;
+            salePriceField.value = (sale.total / sale.quantity).toFixed(2);
+            quantityField.value = sale.quantity;
+            calculateSaleValues();
+            editIndex = index;
+            addSaleButton.textContent = 'Salvar edição';
+            cancelEditButton.classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteSale(index) {
+            if (!confirm('Excluir esta venda?')) return;
+            sales.splice(index, 1);
+            saveSales();
+            applyFilter();
+            if (editIndex === index) resetForm();
+            showToast('Venda excluída com sucesso', 'warning');
+        }
+
+        function closeMonth() {
+            if (sales.length === 0) {
+                showToast('Não há vendas ativas para fechar.', 'warning');
+                return;
+            }
+            if (!confirm('Deseja fechar o mês e mover todas as vendas ativas para o histórico?')) return;
+            const storedClosed = localStorage.getItem(CLOSED_STORAGE_KEY);
+            const closedSales = storedClosed ? JSON.parse(storedClosed) : [];
+            const updatedClosed = [...sales, ...closedSales];
+            saveClosedSales(updatedClosed);
+            sales = [];
+            saveSales();
+            applyFilter();
+            showToast('Mês fechado com sucesso. Vendas movidas para o histórico.', 'success');
+        }
+
+        function handleAddSale() {
+            if (!salesForm.checkValidity()) {
+                salesForm.reportValidity();
+                return;
+            }
+
+            const { total, profit } = calculateSaleValues();
+            const cost = parseFloat(costPriceField.value.replace(',', '.')) || 0;
+            const margin = calculateSaleValues().margin;
+            const saleData = {
+                client: clientNameField.value.trim(),
+                product: productNameField.value.trim(),
+                payment: paymentTypeField.value,
+                quantity: parseInt(quantityField.value, 10),
+                cost,
+                total,
+                profit,
+                margin,
+                createdAt: new Date().toISOString()
+            };
+
+            if (editIndex !== null) {
+                sales[editIndex] = { ...sales[editIndex], ...saleData };
+                showToast('Venda atualizada com sucesso');
+                editIndex = null;
+            } else {
+                sales.unshift(saleData);
+                showToast('Venda adicionada com sucesso');
+            }
+
+            saveSales();
+            applyFilter();
+            resetForm();
+        }
+
+        costPriceField.addEventListener('input', calculateSaleValues);
+        salePriceField.addEventListener('input', calculateSaleValues);
+        quantityField.addEventListener('input', calculateSaleValues);
+        addSaleButton.addEventListener('click', handleAddSale);
+        cancelEditButton.addEventListener('click', resetForm);
+        clearFilterButton.addEventListener('click', () => {
+            filterInput.value = '';
+            paymentFilter.value = 'all';
+            applyFilter();
+        });
+        filterInput.addEventListener('input', applyFilter);
+        paymentFilter.addEventListener('change', applyFilter);
+        sortSelect.addEventListener('change', applyFilter);
+        generateReportButton.addEventListener('click', generatePeriodReport);
+        closeMonthButton.addEventListener('click', closeMonth);
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem(AUTH_KEY);
+            window.location.href = './login.html';
+        });
+
+        window.addEventListener('load', () => {
+            calculateSaleValues();
+            loadSales();
+        });
+    </script>
+</body>
+
+</html>
