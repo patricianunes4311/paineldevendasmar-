@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link href="./CSS/style.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
@@ -62,7 +62,6 @@
                         <strong id="summaryAverage">R$ 0,00</strong>
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -144,7 +143,7 @@
                             <label for="productName" class="form-label">Produto</label>
                             <input type="text" id="productName" class="form-control" placeholder="Ex: Brinco de pérola" required>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="costPrice" class="form-label">Custo unitário (opcional)</label>
                             <input type="number" id="costPrice" class="form-control" min="0" step="0.01" placeholder="0,00">
@@ -213,7 +212,7 @@
                             </thead>
                             <tbody id="salesTableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Nenhuma venda registrada ainda.</td>
+                                    <td colspan="7" class="text-center text-muted py-4">Nenhuma venda registrada ainda.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -225,310 +224,431 @@
 
     <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-    <script>
-        const STORAGE_KEY = 'mareSalesRecords';
-        const CLOSED_STORAGE_KEY = 'mareClosedSales';
-        const filterInput = document.getElementById('filterInput');
-        const paymentFilter = document.getElementById('paymentFilter');
-        const clearFilterButton = document.getElementById('clearFilterButton');
-        const visibleCount = document.getElementById('visibleCount');
-        const cancelEditButton = document.getElementById('cancelEditButton');
-
-        const AUTH_KEY = 'mareLoggedIn';
-        const salesForm = document.getElementById('salesForm');
-        const clientNameField = document.getElementById('clientName');
-        const productNameField = document.getElementById('productName');
-        const costPriceField = document.getElementById('costPrice');
-        const paymentTypeField = document.getElementById('paymentType');
-        const salePriceField = document.getElementById('salePrice');
-        const quantityField = document.getElementById('quantity');
-        const saleTotalField = document.getElementById('saleTotal');
-        const saleProfitField = document.getElementById('saleProfit');
-        const saleMarginField = document.getElementById('saleMargin');
-        const profitWarning = document.getElementById('profitWarning');
-        const reportStart = document.getElementById('reportStart');
-        const reportEnd = document.getElementById('reportEnd');
-        const generateReportButton = document.getElementById('generateReportButton');
-        const closeMonthButton = document.getElementById('closeMonthButton');
-        const periodSales = document.getElementById('periodSales');
-        const periodProfit = document.getElementById('periodProfit');
-        const periodItems = document.getElementById('periodItems');
-        const logoutButton = document.getElementById('logoutButton');
-        const sortSelect = document.getElementById('sortSelect');
-        const toastContainer = document.getElementById('toastContainer');
-
-        const salesTableBody = document.getElementById('salesTableBody');
-        const summarySales = document.getElementById('summarySales');
-        const summaryProfit = document.getElementById('summaryProfit');
-        const summaryAverage = document.getElementById('summaryAverage');
-        const addSaleButton = document.getElementById('addSaleButton');
-
-        let sales = [];
-        let visibleSales = [];
-        let editIndex = null;
-
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        }
-
-        function calculateSaleValues() {
-            const price = parseFloat(salePriceField.value.replace(',', '.')) || 0;
-            const cost = parseFloat(costPriceField.value.replace(',', '.')) || 0;
-            const quantity = parseInt(quantityField.value, 10) || 0;
-            const total = price * quantity;
-            const revenueProfit = total * 0.35;
-            const costTotal = cost * quantity;
-            const profit = cost > 0 ? total - costTotal : revenueProfit;
-            const margin = cost > 0 && costTotal > 0 ? (profit / costTotal) * 100 : 35;
-
-            saleTotalField.textContent = formatCurrency(total);
-            saleProfitField.textContent = formatCurrency(profit);
-            saleMarginField.textContent = `${margin.toFixed(1)}%`;
-            profitWarning.classList.toggle('d-none', margin >= 35 || costTotal === 0);
-
-            return { total, profit, margin };
-        }
-
-        function saveSales() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-        }
-
-        function saveClosedSales(closedSales) {
-            localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(closedSales));
-        }
-
-        function loadSales() {
-            if (!localStorage.getItem(AUTH_KEY)) {
-                window.location.href = './login.html';
-                return;
-            }
-            const stored = localStorage.getItem(STORAGE_KEY);
-            sales = stored ? JSON.parse(stored) : [];
-            applyFilter();
-        }
-
-        function updateSummary() {
-            const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
-            const totalSalesValue = sales.reduce((sum, sale) => sum + sale.total, 0);
-
-            summarySales.textContent = String(sales.length);
-            summaryProfit.textContent = formatCurrency(totalProfit);
-            summaryAverage.textContent = sales.length ? formatCurrency(totalSalesValue / sales.length) : 'R$ 0,00';
-        }
-
-        function updateVisibleCount() {
-            visibleCount.textContent = `Exibindo ${visibleSales.length} de ${sales.length} vendas`;
-        }
-
-        function sortVisibleSales() {
-            visibleSales.sort((a, b) => {
-                if (sortSelect.value === 'total') {
-                    return b.total - a.total;
-                }
-                if (sortSelect.value === 'profit') {
-                    return b.profit - a.profit;
-                }
-                return new Date(b.createdAt) - new Date(a.createdAt);
-            });
-        }
-
-        function applyFilter() {
-            const query = filterInput.value.trim().toLowerCase();
-            const payment = paymentFilter.value;
-            visibleSales = sales.filter(sale => {
-                const matchesQuery = query === '' || sale.client.toLowerCase().includes(query) || sale.product.toLowerCase().includes(query) || sale.payment.toLowerCase().includes(query);
-                const matchesPayment = payment === 'all' || sale.payment === payment;
-                return matchesQuery && matchesPayment;
-            });
-            sortVisibleSales();
-            renderSales();
-        }
-
-
-        function generatePeriodReport() {
-            const start = reportStart.value ? new Date(reportStart.value) : null;
-            const end = reportEnd.value ? new Date(reportEnd.value) : null;
-            if (start && end && start > end) {
-                showToast('A data inicial não pode ser posterior à data final.', 'danger');
-                return;
-            }
-
-            const filtered = sales.filter(sale => {
-                const saleDate = new Date(sale.createdAt);
-                if (start && saleDate < start) return false;
-                if (end) {
-                    const endDate = new Date(end);
-                    endDate.setHours(23, 59, 59, 999);
-                    if (saleDate > endDate) return false;
-                }
-                return true;
-            });
-
-            const totalProfit = filtered.reduce((sum, sale) => sum + sale.profit, 0);
-            const totalQuantity = filtered.reduce((sum, sale) => sum + sale.quantity, 0);
-
-            periodSales.textContent = String(filtered.length);
-            periodProfit.textContent = formatCurrency(totalProfit);
-            periodItems.textContent = String(totalQuantity);
-            showToast('Relatório por período gerado', 'success');
-        }
-
-        function showToast(message, variant = 'success') {
-            const toastEl = document.createElement('div');
-            toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
-            toastEl.role = 'alert';
-            toastEl.ariaLive = 'assertive';
-            toastEl.ariaAtomic = 'true';
-            toastEl.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+    <!-- Modal de confirmação reutilizável -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="confirmModalLabel">Confirmar ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-            `;
-            toastContainer.appendChild(toastEl);
-            const bsToast = new bootstrap.Toast(toastEl, { delay: 2500 });
-            bsToast.show();
-            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-        }
+                <div class="modal-body" id="confirmModalBody"></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-rose" id="confirmModalOk">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function renderSales() {
-            salesTableBody.innerHTML = '';
-            if (visibleSales.length === 0) {
-                const message = sales.length === 0 ? 'Nenhuma venda registrada ainda.' : 'Nenhuma venda encontrada para o filtro.';
-                salesTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${message}</td></tr>`;
-            } else {
-                visibleSales.forEach(sale => {
-                    const saleIndex = sales.findIndex(item => item.createdAt === sale.createdAt);
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${sale.client}</td>
-                        <td>${sale.product}</td>
-                        <td>${sale.payment}</td>
-                        <td class="text-end">${sale.quantity}</td>
-                        <td class="text-end">${formatCurrency(sale.total)}</td>
-                        <td class="text-end text-gold">${formatCurrency(sale.profit)}</td>
-                        <td class="text-end actions-cell">
-                            <button type="button" class="btn btn-sm action-button action-edit me-2">Editar</button>
-                            <button type="button" class="btn btn-sm action-button action-delete">Excluir</button>
-                        </td>
-                    `;
+    <script>
+        // ─── Módulo encapsulado para evitar poluição do escopo global ───────────────
+        (function () {
+            const STORAGE_KEY = 'mareSalesRecords';
+            const CLOSED_STORAGE_KEY = 'mareClosedSales';
+            const AUTH_KEY = 'mareLoggedIn';
 
-                    row.querySelector('.action-edit').addEventListener('click', () => startEditSale(saleIndex));
-                    row.querySelector('.action-delete').addEventListener('click', () => deleteSale(saleIndex));
-                    salesTableBody.appendChild(row);
+            // ─── Referências ao DOM ──────────────────────────────────────────────────
+            const salesForm          = document.getElementById('salesForm');
+            const clientNameField    = document.getElementById('clientName');
+            const productNameField   = document.getElementById('productName');
+            const costPriceField     = document.getElementById('costPrice');
+            const paymentTypeField   = document.getElementById('paymentType');
+            const salePriceField     = document.getElementById('salePrice');
+            const quantityField      = document.getElementById('quantity');
+            const saleTotalField     = document.getElementById('saleTotal');
+            const saleProfitField    = document.getElementById('saleProfit');
+            const saleMarginField    = document.getElementById('saleMargin');
+            const profitWarning      = document.getElementById('profitWarning');
+            const filterInput        = document.getElementById('filterInput');
+            const paymentFilter      = document.getElementById('paymentFilter');
+            const clearFilterButton  = document.getElementById('clearFilterButton');
+            const sortSelect         = document.getElementById('sortSelect');
+            const visibleCount       = document.getElementById('visibleCount');
+            const addSaleButton      = document.getElementById('addSaleButton');
+            const cancelEditButton   = document.getElementById('cancelEditButton');
+            const salesTableBody     = document.getElementById('salesTableBody');
+            const summarySales       = document.getElementById('summarySales');
+            const summaryProfit      = document.getElementById('summaryProfit');
+            const summaryAverage     = document.getElementById('summaryAverage');
+            const reportStart        = document.getElementById('reportStart');
+            const reportEnd          = document.getElementById('reportEnd');
+            const generateReportButton = document.getElementById('generateReportButton');
+            const closeMonthButton   = document.getElementById('closeMonthButton');
+            const periodSales        = document.getElementById('periodSales');
+            const periodProfit       = document.getElementById('periodProfit');
+            const periodItems        = document.getElementById('periodItems');
+            const logoutButton       = document.getElementById('logoutButton');
+            const toastContainer     = document.getElementById('toastContainer');
+            const confirmModal       = new bootstrap.Modal(document.getElementById('confirmModal'));
+            const confirmModalBody   = document.getElementById('confirmModalBody');
+            const confirmModalOk     = document.getElementById('confirmModalOk');
+
+            // ─── Estado ──────────────────────────────────────────────────────────────
+            let sales        = [];
+            let visibleSales = [];
+            let editId       = null; // FIX #2: usa id único em vez de índice
+
+            // ─── Utilitários ─────────────────────────────────────────────────────────
+
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            }
+
+            // FIX #2: gera id único para cada venda
+            function generateId() {
+                return typeof crypto.randomUUID === 'function'
+                    ? crypto.randomUUID()
+                    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+            }
+
+            // FIX #6: escapa HTML para evitar XSS ao inserir dados do usuário no DOM
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ─── Modal de confirmação (substitui confirm() nativo — FIX #8) ─────────
+            function showConfirm(message, onConfirm) {
+                confirmModalBody.textContent = message;
+                confirmModal.show();
+                // Remove listener anterior para evitar acúmulo
+                const handler = () => {
+                    confirmModal.hide();
+                    onConfirm();
+                    confirmModalOk.removeEventListener('click', handler);
+                };
+                confirmModalOk.addEventListener('click', handler);
+            }
+
+            // ─── Toast ───────────────────────────────────────────────────────────────
+            function showToast(message, variant = 'success') {
+                const toastEl = document.createElement('div');
+                toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
+                toastEl.role = 'alert';
+                toastEl.ariaLive = 'assertive';
+                toastEl.ariaAtomic = 'true';
+                toastEl.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${escapeHtml(message)}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+                    </div>
+                `;
+                toastContainer.appendChild(toastEl);
+                const bsToast = new bootstrap.Toast(toastEl, { delay: 2500 });
+                bsToast.show();
+                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+            }
+
+            // ─── Cálculo de valores ──────────────────────────────────────────────────
+            // FIX #3: calculateSaleValues centraliza o cálculo e retorna os valores,
+            // sem ser chamada duplamente no handleAddSale
+            function calculateSaleValues() {
+                const price    = parseFloat(salePriceField.value.replace(',', '.')) || 0;
+                const cost     = parseFloat(costPriceField.value.replace(',', '.')) || 0;
+                const quantity = parseInt(quantityField.value, 10) || 0;
+                const total    = price * quantity;
+                const costTotal = cost * quantity;
+
+                // FIX #7: margem calculada de forma consistente
+                let profit, margin;
+                if (cost > 0 && costTotal > 0) {
+                    profit = total - costTotal;
+                    margin = (profit / costTotal) * 100;
+                } else {
+                    profit = total * 0.35;
+                    margin = 35;
+                }
+
+                saleTotalField.textContent  = formatCurrency(total);
+                saleProfitField.textContent = formatCurrency(profit);
+                saleMarginField.textContent = `${margin.toFixed(1)}%`;
+                profitWarning.classList.toggle('d-none', margin >= 35 || costTotal === 0);
+
+                return { total, profit, margin, costTotal };
+            }
+
+            // ─── Persistência ────────────────────────────────────────────────────────
+            function saveSales() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+            }
+
+            function saveClosedSales(closedSales) {
+                localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(closedSales));
+            }
+
+            function loadSales() {
+                if (!localStorage.getItem(AUTH_KEY)) {
+                    window.location.href = './login.html';
+                    return;
+                }
+                const stored = localStorage.getItem(STORAGE_KEY);
+                sales = stored ? JSON.parse(stored) : [];
+                applyFilter();
+            }
+
+            // ─── Resumo geral ────────────────────────────────────────────────────────
+            function updateSummary() {
+                const totalProfit     = sales.reduce((sum, s) => sum + s.profit, 0);
+                const totalSalesValue = sales.reduce((sum, s) => sum + s.total, 0);
+
+                summarySales.textContent   = String(sales.length);
+                summaryProfit.textContent  = formatCurrency(totalProfit);
+                summaryAverage.textContent = sales.length
+                    ? formatCurrency(totalSalesValue / sales.length)
+                    : 'R$ 0,00';
+            }
+
+            function updateVisibleCount() {
+                visibleCount.textContent = `Exibindo ${visibleSales.length} de ${sales.length} vendas`;
+            }
+
+            // ─── Filtro e ordenação ───────────────────────────────────────────────────
+            function sortVisibleSales() {
+                visibleSales.sort((a, b) => {
+                    if (sortSelect.value === 'total')  return b.total  - a.total;
+                    if (sortSelect.value === 'profit') return b.profit - a.profit;
+                    return new Date(b.createdAt) - new Date(a.createdAt);
                 });
             }
 
-            updateSummary();
-            updateVisibleCount();
-        }
+            function applyFilter() {
+                const query   = filterInput.value.trim().toLowerCase();
+                const payment = paymentFilter.value;
 
-        function resetForm() {
-            editIndex = null;
-            salesForm.reset();
-            quantityField.value = '1';
-            calculateSaleValues();
-            addSaleButton.textContent = 'Adicionar venda';
-            cancelEditButton.classList.add('d-none');
-        }
+                visibleSales = sales.filter(sale => {
+                    const matchesQuery   = query === ''
+                        || sale.client.toLowerCase().includes(query)
+                        || sale.product.toLowerCase().includes(query)
+                        || sale.payment.toLowerCase().includes(query);
+                    const matchesPayment = payment === 'all' || sale.payment === payment;
+                    return matchesQuery && matchesPayment;
+                });
 
-        function startEditSale(index) {
-            const sale = sales[index];
-            clientNameField.value = sale.client;
-            productNameField.value = sale.product;
-            salePriceField.value = (sale.total / sale.quantity).toFixed(2);
-            quantityField.value = sale.quantity;
-            calculateSaleValues();
-            editIndex = index;
-            addSaleButton.textContent = 'Salvar edição';
-            cancelEditButton.classList.remove('d-none');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function deleteSale(index) {
-            if (!confirm('Excluir esta venda?')) return;
-            sales.splice(index, 1);
-            saveSales();
-            applyFilter();
-            if (editIndex === index) resetForm();
-            showToast('Venda excluída com sucesso', 'warning');
-        }
-
-        function closeMonth() {
-            if (sales.length === 0) {
-                showToast('Não há vendas ativas para fechar.', 'warning');
-                return;
-            }
-            if (!confirm('Deseja fechar o mês e mover todas as vendas ativas para o histórico?')) return;
-            const storedClosed = localStorage.getItem(CLOSED_STORAGE_KEY);
-            const closedSales = storedClosed ? JSON.parse(storedClosed) : [];
-            const updatedClosed = [...sales, ...closedSales];
-            saveClosedSales(updatedClosed);
-            sales = [];
-            saveSales();
-            applyFilter();
-            showToast('Mês fechado com sucesso. Vendas movidas para o histórico.', 'success');
-        }
-
-        function handleAddSale() {
-            if (!salesForm.checkValidity()) {
-                salesForm.reportValidity();
-                return;
+                sortVisibleSales();
+                renderSales();
             }
 
-            const { total, profit } = calculateSaleValues();
-            const cost = parseFloat(costPriceField.value.replace(',', '.')) || 0;
-            const margin = calculateSaleValues().margin;
-            const saleData = {
-                client: clientNameField.value.trim(),
-                product: productNameField.value.trim(),
-                payment: paymentTypeField.value,
-                quantity: parseInt(quantityField.value, 10),
-                cost,
-                total,
-                profit,
-                margin,
-                createdAt: new Date().toISOString()
-            };
+            // ─── Relatório por período ────────────────────────────────────────────────
+            function generatePeriodReport() {
+                const start = reportStart.value ? new Date(reportStart.value) : null;
+                const end   = reportEnd.value   ? new Date(reportEnd.value)   : null;
 
-            if (editIndex !== null) {
-                sales[editIndex] = { ...sales[editIndex], ...saleData };
-                showToast('Venda atualizada com sucesso');
-                editIndex = null;
-            } else {
-                sales.unshift(saleData);
-                showToast('Venda adicionada com sucesso');
+                if (start && end && start > end) {
+                    showToast('A data inicial não pode ser posterior à data final.', 'danger');
+                    return;
+                }
+
+                const filtered = sales.filter(sale => {
+                    const saleDate = new Date(sale.createdAt);
+                    if (start && saleDate < start) return false;
+                    if (end) {
+                        const endDate = new Date(end);
+                        endDate.setHours(23, 59, 59, 999);
+                        if (saleDate > endDate) return false;
+                    }
+                    return true;
+                });
+
+                const totalProfit   = filtered.reduce((sum, s) => sum + s.profit, 0);
+                const totalQuantity = filtered.reduce((sum, s) => sum + s.quantity, 0);
+
+                periodSales.textContent  = String(filtered.length);
+                periodProfit.textContent = formatCurrency(totalProfit);
+                periodItems.textContent  = String(totalQuantity);
+                showToast('Relatório por período gerado', 'success');
             }
 
-            saveSales();
-            applyFilter();
-            resetForm();
-        }
+            // ─── Renderização da tabela ───────────────────────────────────────────────
+            function renderSales() {
+                salesTableBody.innerHTML = '';
 
-        costPriceField.addEventListener('input', calculateSaleValues);
-        salePriceField.addEventListener('input', calculateSaleValues);
-        quantityField.addEventListener('input', calculateSaleValues);
-        addSaleButton.addEventListener('click', handleAddSale);
-        cancelEditButton.addEventListener('click', resetForm);
-        clearFilterButton.addEventListener('click', () => {
-            filterInput.value = '';
-            paymentFilter.value = 'all';
-            applyFilter();
-        });
-        filterInput.addEventListener('input', applyFilter);
-        paymentFilter.addEventListener('change', applyFilter);
-        sortSelect.addEventListener('change', applyFilter);
-        generateReportButton.addEventListener('click', generatePeriodReport);
-        closeMonthButton.addEventListener('click', closeMonth);
-        logoutButton.addEventListener('click', () => {
-            localStorage.removeItem(AUTH_KEY);
-            window.location.href = './login.html';
-        });
+                if (visibleSales.length === 0) {
+                    const message = sales.length === 0
+                        ? 'Nenhuma venda registrada ainda.'
+                        : 'Nenhuma venda encontrada para o filtro.';
+                    // FIX #9: colspan corrigido para 7 (era 6)
+                    salesTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${message}</td></tr>`;
+                } else {
+                    visibleSales.forEach(sale => {
+                        const row = document.createElement('tr');
 
-        window.addEventListener('load', () => {
-            calculateSaleValues();
-            loadSales();
-        });
+                        // FIX #10: destaca a linha sendo editada
+                        if (sale.id === editId) {
+                            row.classList.add('table-warning');
+                        }
+
+                        // FIX #6: dados do usuário inseridos via textContent, não innerHTML
+                        const tdClient  = document.createElement('td');
+                        const tdProduct = document.createElement('td');
+                        const tdPayment = document.createElement('td');
+                        tdClient.dataset.label  = 'Cliente';
+                        tdProduct.dataset.label = 'Produto';
+                        tdPayment.dataset.label = 'Pagamento';
+                        tdClient.textContent  = sale.client;
+                        tdProduct.textContent = sale.product;
+                        tdPayment.textContent = sale.payment;
+
+                        row.innerHTML = `
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="text-end" data-label="Qtd.">${sale.quantity}</td>
+                            <td class="text-end" data-label="Total">${formatCurrency(sale.total)}</td>
+                            <td class="text-end text-gold" data-label="Lucro">${formatCurrency(sale.profit)}</td>
+                            <td class="text-end actions-cell">
+                                <button type="button" class="btn btn-sm action-button action-edit me-2">Editar</button>
+                                <button type="button" class="btn btn-sm action-button action-delete">Excluir</button>
+                            </td>
+                        `;
+
+                        // Substitui os <td> placeholders pelos seguros
+                        row.cells[0].replaceWith(tdClient);
+                        row.cells[0].replaceWith(tdProduct);
+                        row.cells[0].replaceWith(tdPayment);
+
+                        // FIX #2: busca por id único em vez de índice
+                        row.querySelector('.action-edit').addEventListener('click', () => startEditSale(sale.id));
+                        row.querySelector('.action-delete').addEventListener('click', () => deleteSale(sale.id));
+                        salesTableBody.appendChild(row);
+                    });
+                }
+
+                updateSummary();
+                updateVisibleCount();
+            }
+
+            // ─── Formulário ──────────────────────────────────────────────────────────
+            function resetForm() {
+                editId = null;
+                salesForm.reset();
+                quantityField.value = '1';
+                calculateSaleValues();
+                addSaleButton.textContent = 'Adicionar venda';
+                cancelEditButton.classList.add('d-none');
+                // Remove destaque da linha editada
+                renderSales();
+            }
+
+            // FIX #1: startEditSale agora restaura TODOS os campos, inclusive costPrice e paymentType
+            function startEditSale(id) {
+                const sale = sales.find(s => s.id === id);
+                if (!sale) return;
+
+                clientNameField.value  = sale.client;
+                productNameField.value = sale.product;
+                costPriceField.value   = sale.cost > 0 ? sale.cost.toFixed(2) : '';
+                paymentTypeField.value = sale.payment;
+                salePriceField.value   = (sale.total / sale.quantity).toFixed(2);
+                quantityField.value    = sale.quantity;
+
+                calculateSaleValues();
+                editId = id;
+                addSaleButton.textContent = 'Salvar edição';
+                cancelEditButton.classList.remove('d-none');
+
+                // FIX #10: re-renderiza para destacar a linha
+                renderSales();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // FIX #2 + #4: deleteSale usa id único, sem risco de índice desatualizado
+            function deleteSale(id) {
+                showConfirm('Excluir esta venda?', () => {
+                    sales = sales.filter(s => s.id !== id);
+                    saveSales();
+                    if (editId === id) resetForm();
+                    applyFilter();
+                    showToast('Venda excluída com sucesso', 'warning');
+                });
+            }
+
+            function closeMonth() {
+                if (sales.length === 0) {
+                    showToast('Não há vendas ativas para fechar.', 'warning');
+                    return;
+                }
+                showConfirm('Deseja fechar o mês e mover todas as vendas ativas para o histórico?', () => {
+                    const storedClosed  = localStorage.getItem(CLOSED_STORAGE_KEY);
+                    const closedSales   = storedClosed ? JSON.parse(storedClosed) : [];
+                    const updatedClosed = [...sales, ...closedSales];
+                    saveClosedSales(updatedClosed);
+                    sales = [];
+                    saveSales();
+                    applyFilter();
+                    showToast('Mês fechado com sucesso. Vendas movidas para o histórico.', 'success');
+                });
+            }
+
+            // FIX #3: calculateSaleValues chamado apenas uma vez
+            function handleAddSale() {
+                if (!salesForm.checkValidity()) {
+                    salesForm.reportValidity();
+                    return;
+                }
+
+                const { total, profit, margin } = calculateSaleValues();
+                const cost = parseFloat(costPriceField.value.replace(',', '.')) || 0;
+
+                const saleData = {
+                    client:    clientNameField.value.trim(),
+                    product:   productNameField.value.trim(),
+                    payment:   paymentTypeField.value,
+                    quantity:  parseInt(quantityField.value, 10),
+                    cost,
+                    total,
+                    profit,
+                    margin,
+                    createdAt: new Date().toISOString()
+                };
+
+                if (editId !== null) {
+                    // FIX #2: atualiza pelo id, não por índice
+                    const idx = sales.findIndex(s => s.id === editId);
+                    if (idx !== -1) {
+                        sales[idx] = { ...sales[idx], ...saleData };
+                    }
+                    editId = null;
+                    showToast('Venda atualizada com sucesso');
+                } else {
+                    // FIX #2: cada nova venda recebe um id único
+                    sales.unshift({ id: generateId(), ...saleData });
+                    showToast('Venda adicionada com sucesso');
+                }
+
+                saveSales();
+                applyFilter();
+                resetForm();
+            }
+
+            // ─── Event listeners ──────────────────────────────────────────────────────
+            costPriceField.addEventListener('input', calculateSaleValues);
+            salePriceField.addEventListener('input', calculateSaleValues);
+            quantityField.addEventListener('input', calculateSaleValues);
+            addSaleButton.addEventListener('click', handleAddSale);
+            cancelEditButton.addEventListener('click', resetForm);
+            clearFilterButton.addEventListener('click', () => {
+                filterInput.value    = '';
+                paymentFilter.value  = 'all';
+                applyFilter();
+            });
+            filterInput.addEventListener('input', applyFilter);
+            paymentFilter.addEventListener('change', applyFilter);
+            sortSelect.addEventListener('change', applyFilter);
+            generateReportButton.addEventListener('click', generatePeriodReport);
+            closeMonthButton.addEventListener('click', closeMonth);
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem(AUTH_KEY);
+                window.location.href = './login.html';
+            });
+
+            window.addEventListener('load', () => {
+                calculateSaleValues();
+                loadSales();
+            });
+
+        })(); // fim do IIFE
     </script>
 </body>
 

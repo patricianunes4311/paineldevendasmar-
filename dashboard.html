@@ -11,7 +11,456 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
-    <title>Dashboard - Mar.é Semi jóias</title>
+    <title>Dashboard — Mar.é Semi jóias</title>
+
+    <style>
+        /* ── Fallback caso o style.css externo não carregue ─────────── */
+        .logo { max-width: 120px !important; height: auto !important; padding: 4px; }
+        .navbar { padding: 0.4rem 1rem; }
+        body { padding-top: 100px !important; }
+        @media (max-width: 991px) { body { padding-top: 80px !important; } }
+
+        /* ── Dashboard-specific styles ─────────────────────────────── */
+
+        /* KPI cards no topo */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 576px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+
+        .kpi-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.75rem;
+            padding: 1.75rem 1.5rem 1.5rem;
+            background: linear-gradient(145deg, rgba(255,255,255,0.97), rgba(255,240,250,0.95));
+            border: 1px solid rgba(255, 186, 206, 0.45);
+            box-shadow: 0 12px 32px rgba(162, 69, 127, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(162, 69, 127, 0.13);
+        }
+
+        .kpi-card .kpi-icon {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            font-size: 1.6rem;
+            opacity: 0.18;
+        }
+
+        .kpi-card .kpi-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #8b5e86;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-card .kpi-value {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 700;
+            color: #34132b;
+            line-height: 1.1;
+            margin-bottom: 0.35rem;
+        }
+
+        .kpi-card .kpi-sub {
+            font-size: 0.78rem;
+            color: #9a6d8a;
+        }
+
+        .kpi-card.accent-rose {
+            background: linear-gradient(145deg, rgba(255, 91, 182, 0.08), rgba(255,255,255,0.97));
+            border-color: rgba(255, 91, 182, 0.25);
+        }
+
+        .kpi-card.accent-gold {
+            background: linear-gradient(145deg, rgba(226, 169, 13, 0.08), rgba(255,255,255,0.97));
+            border-color: rgba(226, 169, 13, 0.3);
+        }
+
+        .kpi-card.accent-plum {
+            background: linear-gradient(145deg, rgba(159, 79, 149, 0.08), rgba(255,255,255,0.97));
+            border-color: rgba(159, 79, 149, 0.25);
+        }
+
+        /* Insight highlight no topo */
+        .insight-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.9rem 1.25rem;
+            border-radius: 1.2rem;
+            background: linear-gradient(135deg, rgba(255, 238, 246, 0.95), rgba(255, 242, 207, 0.9));
+            border: 1px solid rgba(255, 181, 212, 0.35);
+            color: #5e3d5a;
+            font-size: 0.88rem;
+            margin-bottom: 2rem;
+        }
+
+        .insight-bar .insight-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff5bb6, #e8a03b);
+            flex-shrink: 0;
+        }
+
+        /* Seção de gráficos */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section { grid-template-columns: 1fr; }
+        }
+
+        .chart-panel {
+            background: rgba(255, 255, 255, 0.93);
+            border: 1px solid rgba(255, 182, 207, 0.45);
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 12px 28px rgba(162, 69, 127, 0.07);
+        }
+
+        .chart-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .chart-panel-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4c2c48;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .chart-total-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255, 91, 182, 0.1);
+            color: #9f3b78;
+            white-space: nowrap;
+        }
+
+        .chart-total-badge.gold {
+            background: rgba(226, 169, 13, 0.12);
+            color: #7c5500;
+        }
+
+        /* Barras do gráfico melhoradas */
+        .chart-grid {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 0.5rem;
+            height: 160px;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .chart-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0;
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        .chart-bar-wrap {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .chart-bar-fill {
+            width: 100%;
+            border-radius: 0.6rem 0.6rem 0 0;
+            min-height: 4px;
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            cursor: default;
+        }
+
+        /* Tooltip nativo via title, mas aprimorado visualmente via ::after */
+        .chart-bar-fill:hover::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2e1f2d;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -1.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #8a5c7c;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .chart-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a4b7f;
+            font-size: 0.88rem;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        /* Listas de top produtos/clientes */
+        .lists-section {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .lists-section { grid-template-columns: 1fr; }
+        }
+
+        .list-panel {
+            background: rgba(255, 255, 255, 0.93);
+            border: 1px solid rgba(255, 182, 207, 0.45);
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 12px 28px rgba(162, 69, 127, 0.07);
+        }
+
+        .list-panel h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4c2c48;
+            margin-bottom: 1.1rem;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid rgba(255, 186, 206, 0.18);
+        }
+
+        .rank-item:last-child { border-bottom: none; }
+
+        .rank-number {
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rank-number.gold-1  { background: rgba(226,169,13,0.2); color: #7c5500; }
+        .rank-number.gold-2  { background: rgba(180,180,180,0.2); color: #555; }
+        .rank-number.gold-3  { background: rgba(180,120,60,0.15); color: #7a4a20; }
+        .rank-number.gold-n  { background: rgba(200,200,200,0.12); color: #888; }
+
+        .rank-name {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #3d2138;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .rank-bar-bg {
+            width: 80px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(200,180,210,0.2);
+            flex-shrink: 0;
+        }
+
+        .rank-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #ff5bb6, #e8a03b);
+        }
+
+        .rank-count {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #9f3b78;
+            flex-shrink: 0;
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        /* Seção de exportação */
+        .export-panel {
+            background: linear-gradient(135deg, rgba(255,91,182,0.06), rgba(226,169,13,0.06));
+            border: 1px solid rgba(255,186,206,0.4);
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .export-panel p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: #5e3d5a;
+        }
+
+        .export-panel strong {
+            display: block;
+            font-size: 1rem;
+            color: #34132b;
+            margin-bottom: 0.2rem;
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Skeleton loader */
+        .skeleton {
+            background: linear-gradient(90deg,
+                rgba(255,186,206,0.2) 25%,
+                rgba(255,186,206,0.4) 50%,
+                rgba(255,186,206,0.2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 0.75rem;
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-kpi {
+            height: 90px;
+            border-radius: 1.75rem;
+        }
+
+        .skeleton-chart {
+            height: 200px;
+            border-radius: 1.75rem;
+        }
+
+        /* Fade-in ao carregar */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* Toast container já está no style.css */
+        #toastContainer { z-index: 1070; }
+
+        /* Seção hero compacta para dashboard */
+        .dashboard-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-hero-text .eyebrow {
+            margin-bottom: 0.25rem;
+        }
+
+        .dashboard-hero-text h1 {
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            color: #34132b;
+            margin: 0;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-actions {
+                width: 100%;
+            }
+            .dashboard-actions .btn {
+                flex: 1;
+                font-size: 0.85rem;
+            }
+            .export-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .export-actions {
+                width: 100%;
+            }
+            .export-actions .btn {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -31,7 +480,7 @@
                         <a class="nav-link" href="./historico.html">Histórico</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">Dashboard</a>
+                        <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
                     </li>
                 </ul>
                 <div class="d-flex mt-3 mt-lg-0">
@@ -42,218 +491,437 @@
     </nav>
 
     <main class="main-content">
-        <section class="hero-section" aria-label="Dashboard de vendas">
-            <div class="hero-text">
+
+        <!-- Hero compacto com ações -->
+        <div class="dashboard-hero fade-in">
+            <div class="dashboard-hero-text">
                 <p class="eyebrow">Dashboard</p>
-                <h1>Seu painel de performance</h1>
-                <p>Visualize lucro, vendas e tendências num único lugar, com gráficos rápidos e exportação imediata.</p>
+                <h1>Painel de performance</h1>
             </div>
-            <div class="card-glow">
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <small>Total de vendas</small>
-                        <strong id="dashboardSales">0</strong>
-                    </div>
-                    <div class="summary-card">
-                        <small>Lucro acumulado</small>
-                        <strong id="dashboardProfit">R$ 0,00</strong>
-                    </div>
-                    <div class="summary-card">
-                        <small>Ticket médio</small>
-                        <strong id="dashboardAverage">R$ 0,00</strong>
-                    </div>
-                </div>
-                <div class="hero-note">
-                    <p>Para acompanhar suas vendas com precisão, use a exportação de dados ou consulte os gráficos de receita e lucro.</p>
-                </div>
+            <div class="dashboard-actions">
+                <button id="exportDashboardCsv" type="button" class="btn btn-outline-gold">
+                    ↓ Exportar CSV
+                </button>
+                <button id="printDashboard" type="button" class="btn btn-rose">
+                    Imprimir
+                </button>
             </div>
-        </section>
+        </div>
 
-        <section class="sales-section" aria-label="Gráficos de vendas">
-            <div class="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                <div>
-                    <h2>Resumo visual</h2>
-                    <p>Gráficos de receita mensal, produtos mais vendidos e clientes que mais compram.</p>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <button id="exportDashboardCsv" type="button" class="btn btn-outline-gold">Exportar CSV</button>
-                    <button id="printDashboard" type="button" class="btn btn-rose">Imprimir</button>
-                </div>
-            </div>
+        <!-- Insight dinâmico -->
+        <div id="insightBar" class="insight-bar fade-in" style="transition-delay: 0.05s">
+            <div class="insight-dot"></div>
+            <span id="insightText">Carregando análise…</span>
+        </div>
 
-            <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <h3>Receita nos últimos 6 meses</h3>
-                    <div id="revenueChart" class="chart-grid"></div>
-                </div>
-                <div class="dashboard-card">
-                    <h3>Lucro nos últimos 6 meses</h3>
-                    <div id="profitChart" class="chart-grid"></div>
-                </div>
-            </div>
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpiGrid">
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-kpi"></div>
+        </div>
 
-            <div class="dashboard-meta row g-4">
-                <div class="col-lg-6">
-                    <div class="dashboard-card dashboard-list-card">
-                        <h3>Produtos mais vendidos</h3>
-                        <ul id="topProductsList" class="list-unstyled mb-0"></ul>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="dashboard-card dashboard-list-card">
-                        <h3>Clientes mais ativos</h3>
-                        <ul id="topClientsList" class="list-unstyled mb-0"></ul>
-                    </div>
-                </div>
+        <!-- Gráficos -->
+        <div class="charts-section" id="chartsSection">
+            <div class="skeleton skeleton-chart"></div>
+            <div class="skeleton skeleton-chart"></div>
+        </div>
+
+        <!-- Listas top produtos / clientes -->
+        <div class="lists-section" id="listsSection">
+            <div class="skeleton skeleton-chart"></div>
+            <div class="skeleton skeleton-chart"></div>
+        </div>
+
+        <!-- Painel de exportação -->
+        <div class="export-panel fade-in" style="transition-delay: 0.3s">
+            <div>
+                <strong>Exportar dados completos</strong>
+                <p>Baixe todas as vendas (ativas + histórico) em CSV para usar no Excel ou Google Sheets.</p>
             </div>
-        </section>
+            <div class="export-actions">
+                <button id="exportDashboardCsv2" type="button" class="btn btn-outline-gold">↓ CSV</button>
+                <button id="printDashboard2" type="button" class="btn btn-rose">Imprimir</button>
+            </div>
+        </div>
+
     </main>
 
-    <script>
-        const STORAGE_KEY = 'mareSalesRecords';
-        const CLOSED_STORAGE_KEY = 'mareClosedSales';
-        const AUTH_KEY = 'mareLoggedIn';
-        const dashboardSales = document.getElementById('dashboardSales');
-        const dashboardProfit = document.getElementById('dashboardProfit');
-        const dashboardAverage = document.getElementById('dashboardAverage');
-        const revenueChart = document.getElementById('revenueChart');
-        const profitChart = document.getElementById('profitChart');
-        const topProductsList = document.getElementById('topProductsList');
-        const topClientsList = document.getElementById('topClientsList');
-        const exportDashboardCsv = document.getElementById('exportDashboardCsv');
-        const printDashboard = document.getElementById('printDashboard');
-        const logoutButton = document.getElementById('logoutButton');
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
+    <script>
+    (function () {
+        const STORAGE_KEY        = 'mareSalesRecords';
+        const CLOSED_STORAGE_KEY = 'mareClosedSales';
+        const AUTH_KEY           = 'mareLoggedIn';
+
+        // ── DOM refs ──────────────────────────────────────────────
+        const kpiGrid            = document.getElementById('kpiGrid');
+        const chartsSection      = document.getElementById('chartsSection');
+        const listsSection       = document.getElementById('listsSection');
+        const insightText        = document.getElementById('insightText');
+        const toastContainer     = document.getElementById('toastContainer');
+        const logoutButton       = document.getElementById('logoutButton');
+
+        // ── Utilitários ───────────────────────────────────────────
         function formatCurrency(value) {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
 
-        function createChartBars(container, items, color) {
+        // FIX #6: XSS — nunca inserir dados do usuário via innerHTML
+        function setText(el, text) {
+            el.textContent = text;
+        }
+
+        function showToast(message, variant = 'success') {
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
+            toastEl.role = 'alert';
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+                </div>`;
+            toastContainer.appendChild(toastEl);
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 2800 });
+            bsToast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+
+        function fadeIn(els) {
+            els.forEach((el, i) => {
+                el.style.transitionDelay = `${i * 0.06}s`;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => el.classList.add('visible'));
+                });
+            });
+        }
+
+        // ── Storage ───────────────────────────────────────────────
+        function getSales() {
+            const active = localStorage.getItem(STORAGE_KEY);
+            const closed = localStorage.getItem(CLOSED_STORAGE_KEY);
+            return [
+                ...(active ? JSON.parse(active) : []),
+                ...(closed ? JSON.parse(closed) : [])
+            ];
+        }
+
+        // ── KPIs ──────────────────────────────────────────────────
+        function renderKpis(sales) {
+            const totalProfit     = sales.reduce((s, x) => s + x.profit, 0);
+            const totalRevenue    = sales.reduce((s, x) => s + x.total, 0);
+            // FIX #1: totalItems agora é exibido
+            const totalItems      = sales.reduce((s, x) => s + x.quantity, 0);
+            const avgTicket       = sales.length ? totalRevenue / sales.length : 0;
+
+            kpiGrid.innerHTML = '';
+
+            const cards = [
+                {
+                    label: 'Total de vendas',
+                    value: String(sales.length),
+                    sub: `${totalItems} itens vendidos`,
+                    icon: '🛍️',
+                    accent: 'accent-plum'
+                },
+                {
+                    label: 'Lucro acumulado',
+                    value: formatCurrency(totalProfit),
+                    sub: `Margem média ${sales.length ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%`,
+                    icon: '💰',
+                    accent: 'accent-gold'
+                },
+                {
+                    label: 'Ticket médio',
+                    value: formatCurrency(avgTicket),
+                    sub: `Receita total ${formatCurrency(totalRevenue)}`,
+                    icon: '📈',
+                    accent: 'accent-rose'
+                }
+            ];
+
+            cards.forEach(c => {
+                const div = document.createElement('div');
+                div.className = `kpi-card fade-in ${c.accent}`;
+                // Conteúdo seguro: valores numéricos/formatados, não entrada do usuário
+                div.innerHTML = `
+                    <span class="kpi-icon">${c.icon}</span>
+                    <span class="kpi-label">${c.label}</span>
+                    <span class="kpi-value">${c.value}</span>
+                    <span class="kpi-sub">${c.sub}</span>
+                `;
+                kpiGrid.appendChild(div);
+            });
+
+            fadeIn([...kpiGrid.querySelectorAll('.kpi-card')]);
+        }
+
+        // ── Gráficos ──────────────────────────────────────────────
+        function buildMonths(sales) {
+            const months = [];
+            const now = new Date();
+            for (let offset = 5; offset >= 0; offset--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+                months.push({
+                    key: `${d.getFullYear()}-${d.getMonth()}`,
+                    label: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+                    revenue: 0,
+                    profit: 0
+                });
+            }
+            const map = Object.fromEntries(months.map(m => [m.key, m]));
+            sales.forEach(sale => {
+                const d = new Date(sale.createdAt);
+                const key = `${d.getFullYear()}-${d.getMonth()}`;
+                if (map[key]) {
+                    map[key].revenue += sale.total;
+                    map[key].profit  += sale.profit;
+                }
+            });
+            return months;
+        }
+
+        function renderChart(container, items, gradientStart, gradientEnd, totalBadgeId) {
             container.innerHTML = '';
-            const hasData = items.some(item => item.value > 0);
+            const hasData = items.some(i => i.value > 0);
+
             if (!hasData) {
                 const empty = document.createElement('div');
                 empty.className = 'chart-empty';
-                empty.textContent = 'Sem dados suficientes para gerar o gráfico.';
+                empty.textContent = 'Sem dados para este período.';
                 container.appendChild(empty);
                 return;
             }
 
-            const maxValue = Math.max(...items.map(item => item.value), 1);
+            const maxVal = Math.max(...items.map(i => i.value), 1);
+
             items.forEach(item => {
+                const pct = item.value > 0 ? Math.max((item.value / maxVal) * 100, 4) : 4;
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
-                const height = item.value > 0 ? (item.value / maxValue) * 100 : 8;
                 bar.innerHTML = `
-                    <div class="chart-bar-fill" style="height: ${height}%; background: linear-gradient(180deg, ${color} 0%, rgba(255,255,255,0.95) 100%);"></div>
-                    <span>${item.label}</span>
-                    <strong>${formatCurrency(item.value)}</strong>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar-fill"
+                             data-value="${formatCurrency(item.value)}"
+                             style="height:0%; background: linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%);">
+                        </div>
+                    </div>
+                    <span class="chart-bar-label">${item.label}</span>
                 `;
                 container.appendChild(bar);
+
+                // Animação de entrada
+                const fill = bar.querySelector('.chart-bar-fill');
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        fill.style.transition = 'height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        fill.style.height = `${pct}%`;
+                    });
+                });
             });
         }
 
-        function buildTopList(container, entries) {
-            container.innerHTML = '';
-            if (entries.length === 0) {
-                container.innerHTML = '<li class="text-muted py-2">Sem dados para exibir ainda.</li>';
-                return;
-            }
-            entries.forEach(entry => {
-                const item = document.createElement('li');
-                item.className = 'dashboard-list-item';
-                item.innerHTML = `<strong>${entry.name}</strong> <span>${entry.count}x</span>`;
-                container.appendChild(item);
+        function renderCharts(sales) {
+            const months = buildMonths(sales);
+            const revenueItems = months.map(m => ({ label: m.label, value: m.revenue }));
+            const profitItems  = months.map(m => ({ label: m.label, value: m.profit  }));
+
+            const totalRevenue = revenueItems.reduce((s, i) => s + i.value, 0);
+            const totalProfit  = profitItems.reduce((s, i)  => s + i.value, 0);
+
+            chartsSection.innerHTML = '';
+
+            const panels = [
+                {
+                    title: 'Receita — últimos 6 meses',
+                    badge: formatCurrency(totalRevenue),
+                    badgeClass: '',
+                    items: revenueItems,
+                    g1: 'rgba(255,91,182,0.75)',
+                    g2: 'rgba(255,91,182,0.08)'
+                },
+                {
+                    title: 'Lucro — últimos 6 meses',
+                    badge: formatCurrency(totalProfit),
+                    badgeClass: 'gold',
+                    items: profitItems,
+                    g1: 'rgba(226,169,13,0.85)',
+                    g2: 'rgba(226,169,13,0.06)'
+                }
+            ];
+
+            panels.forEach(p => {
+                const panel = document.createElement('div');
+                panel.className = 'chart-panel fade-in';
+                panel.innerHTML = `
+                    <div class="chart-panel-header">
+                        <h3>${p.title}</h3>
+                        <span class="chart-total-badge ${p.badgeClass}">${p.badge}</span>
+                    </div>
+                    <div class="chart-grid"></div>
+                `;
+                chartsSection.appendChild(panel);
+                renderChart(panel.querySelector('.chart-grid'), p.items, p.g1, p.g2);
             });
+
+            fadeIn([...chartsSection.querySelectorAll('.chart-panel')]);
         }
 
-        function getSalesFromStorage() {
-            const storedActive = localStorage.getItem(STORAGE_KEY);
-            const storedClosed = localStorage.getItem(CLOSED_STORAGE_KEY);
-            const activeSales = storedActive ? JSON.parse(storedActive) : [];
-            const closedSales = storedClosed ? JSON.parse(storedClosed) : [];
-            return [...activeSales, ...closedSales];
-        }
-
-        function renderDashboard() {
-            const sales = getSalesFromStorage();
-            const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
-            const totalSalesValue = sales.reduce((sum, sale) => sum + sale.total, 0);
-            const totalItems = sales.reduce((sum, sale) => sum + sale.quantity, 0);
-
-            dashboardSales.textContent = String(sales.length);
-            dashboardProfit.textContent = formatCurrency(totalProfit);
-            dashboardAverage.textContent = sales.length ? formatCurrency(totalSalesValue / sales.length) : 'R$ 0,00';
-
-            const months = [];
-            const now = new Date();
-            for (let offset = 5; offset >= 0; offset -= 1) {
-                const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-                const label = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-                months.push({ key: `${date.getFullYear()}-${date.getMonth()}`, label, revenue: 0, profit: 0 });
-            }
-
-            const monthMap = Object.fromEntries(months.map(item => [item.key, item]));
+        // ── Listas de ranking ─────────────────────────────────────
+        function renderLists(sales) {
             const productMap = new Map();
-            const clientMap = new Map();
+            const clientMap  = new Map();
 
             sales.forEach(sale => {
-                const saleDate = new Date(sale.createdAt);
-                const key = `${saleDate.getFullYear()}-${saleDate.getMonth()}`;
-                if (monthMap[key]) {
-                    monthMap[key].revenue += sale.total;
-                    monthMap[key].profit += sale.profit;
-                }
                 productMap.set(sale.product, (productMap.get(sale.product) || 0) + sale.quantity);
-                clientMap.set(sale.client, (clientMap.get(sale.client) || 0) + sale.quantity);
+                clientMap.set(sale.client,   (clientMap.get(sale.client)  || 0) + sale.quantity);
             });
-
-            const revenueItems = months.map(item => ({ label: item.label, value: item.revenue }));
-            const profitItems = months.map(item => ({ label: item.label, value: item.profit }));
-
-            createChartBars(revenueChart, revenueItems, 'rgba(255, 158, 205, 0.9)');
-            createChartBars(profitChart, profitItems, 'rgba(226, 169, 13, 0.95)');
 
             const topProducts = [...productMap.entries()]
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
+                .sort((a, b) => b[1] - a[1]).slice(0, 5)
                 .map(([name, count]) => ({ name, count }));
             const topClients = [...clientMap.entries()]
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
+                .sort((a, b) => b[1] - a[1]).slice(0, 5)
                 .map(([name, count]) => ({ name, count }));
 
-            buildTopList(topProductsList, topProducts);
-            buildTopList(topClientsList, topClients);
+            listsSection.innerHTML = '';
+
+            [
+                { title: 'Produtos mais vendidos', entries: topProducts },
+                { title: 'Clientes mais ativos',   entries: topClients  }
+            ].forEach(({ title, entries }) => {
+                const panel = document.createElement('div');
+                panel.className = 'list-panel fade-in';
+
+                const h3 = document.createElement('h3');
+                h3.textContent = title;
+                panel.appendChild(h3);
+
+                if (entries.length === 0) {
+                    const empty = document.createElement('p');
+                    empty.className = 'text-muted';
+                    empty.style.fontSize = '0.88rem';
+                    empty.textContent = 'Sem dados para exibir ainda.';
+                    panel.appendChild(empty);
+                } else {
+                    const maxCount = entries[0].count;
+                    entries.forEach((entry, i) => {
+                        const medalClass = i === 0 ? 'gold-1' : i === 1 ? 'gold-2' : i === 2 ? 'gold-3' : 'gold-n';
+                        const item = document.createElement('div');
+                        item.className = 'rank-item';
+
+                        const numEl = document.createElement('div');
+                        numEl.className = `rank-number ${medalClass}`;
+                        numEl.textContent = String(i + 1);
+
+                        const nameEl = document.createElement('div');
+                        nameEl.className = 'rank-name';
+                        // FIX #6: textContent para dados do usuário
+                        nameEl.textContent = entry.name;
+
+                        const barPct = (entry.count / maxCount) * 100;
+                        const barBg = document.createElement('div');
+                        barBg.className = 'rank-bar-bg';
+                        barBg.innerHTML = `<div class="rank-bar-fill" style="width:${barPct}%"></div>`;
+
+                        const countEl = document.createElement('div');
+                        countEl.className = 'rank-count';
+                        countEl.textContent = `${entry.count}×`;
+
+                        item.append(numEl, nameEl, barBg, countEl);
+                        panel.appendChild(item);
+                    });
+                }
+
+                listsSection.appendChild(panel);
+            });
+
+            fadeIn([...listsSection.querySelectorAll('.list-panel')]);
         }
 
-        function downloadDashboardCsv() {
-            const sales = getSalesFromStorage();
+        // ── Insight dinâmico ──────────────────────────────────────
+        function renderInsight(sales) {
             if (sales.length === 0) {
-                alert('Não há vendas para exportar.');
+                insightText.textContent = 'Nenhuma venda registrada ainda. Comece pelo painel de vendas.';
                 return;
             }
-            const rows = [
-                ['Data', 'Cliente', 'Produto', 'Pagamento', 'Quantidade', 'Total', 'Lucro', 'Margem']
-            ];
+
+            const productMap = new Map();
+            sales.forEach(s => productMap.set(s.product, (productMap.get(s.product) || 0) + s.quantity));
+            const topProduct = [...productMap.entries()].sort((a, b) => b[1] - a[1])[0];
+
+            const months = buildMonths(sales);
+            const bestMonth = [...months].sort((a, b) => b.profit - a.profit)[0];
+            const bestMonthLabel = bestMonth && bestMonth.profit > 0 ? bestMonth.label : null;
+
+            const totalProfit  = sales.reduce((s, x) => s + x.profit, 0);
+            const totalRevenue = sales.reduce((s, x) => s + x.total, 0);
+            const margin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0;
+
+            let msg = `Margem geral de ${margin}%`;
+            if (topProduct) msg += ` · Produto destaque: ${topProduct[0]} (${topProduct[1]}×)`;
+            if (bestMonthLabel) msg += ` · Melhor mês: ${bestMonthLabel}`;
+
+            // FIX #6: textContent para dados do usuário
+            insightText.textContent = msg;
+        }
+
+        // ── Exportação CSV ────────────────────────────────────────
+        // FIX #7: BOM UTF-8 para Excel
+        function downloadCsv() {
+            const sales = getSales();
+            if (sales.length === 0) {
+                showToast('Não há vendas para exportar.', 'warning');
+                return;
+            }
+            const rows = [['Data','Cliente','Produto','Pagamento','Quantidade','Total','Lucro','Margem']];
             sales.forEach(sale => {
                 const date = new Date(sale.createdAt).toLocaleDateString('pt-BR');
-                rows.push([date, sale.client, sale.product, sale.payment || '', sale.quantity, sale.total.toFixed(2), sale.profit.toFixed(2), sale.margin.toFixed(1) + '%']);
+                // FIX #8: margin pode ser undefined em registros antigos
+                const margin = sale.margin != null ? Number(sale.margin).toFixed(1) + '%' : '-';
+                rows.push([
+                    date,
+                    sale.client,
+                    sale.product,
+                    sale.payment || '',
+                    sale.quantity,
+                    sale.total.toFixed(2),
+                    sale.profit.toFixed(2),
+                    margin
+                ]);
             });
-            const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+            const csv = '\uFEFF' + rows
+                .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
+            const url  = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
-            link.download = 'dashboard-vendas.csv';
+            link.href     = url;
+            link.download = `mare-vendas-${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            // FIX #12: feedback visual após exportar
+            showToast('CSV exportado com sucesso!');
         }
 
-        exportDashboardCsv.addEventListener('click', downloadDashboardCsv);
-        printDashboard.addEventListener('click', () => window.print());
+        // ── Init ──────────────────────────────────────────────────
+        function renderDashboard() {
+            const sales = getSales();
+            renderInsight(sales);
+            renderKpis(sales);
+            renderCharts(sales);
+            renderLists(sales);
+        }
+
+        // Botões de exportar/imprimir (duplicados no topo e no painel)
+        document.getElementById('exportDashboardCsv').addEventListener('click', downloadCsv);
+        document.getElementById('exportDashboardCsv2').addEventListener('click', downloadCsv);
+        document.getElementById('printDashboard').addEventListener('click', () => window.print());
+        document.getElementById('printDashboard2').addEventListener('click', () => window.print());
+
         logoutButton.addEventListener('click', () => {
             localStorage.removeItem(AUTH_KEY);
             window.location.href = './login.html';
@@ -264,9 +932,13 @@
                 window.location.href = './login.html';
                 return;
             }
-            renderDashboard();
+            // Pequeno delay para skeleton ser visível antes dos dados
+            setTimeout(renderDashboard, 300);
+            // Fade-in dos elementos estáticos
+            fadeIn([...document.querySelectorAll('.fade-in')]);
         });
+
+    })();
     </script>
 </body>
-
 </html>
