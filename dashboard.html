@@ -10,8 +10,9 @@
     <link href="./CSS/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
-    <title>Dashboard — Mar.é Semi jóias</title>
+        crossorigin="anonymous"></script>    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+    <script defer src="./firebase-db.js"></script>    <title>Dashboard — Mar.é Semi jóias</title>
 
     <style>
         /* ── Fallback caso o style.css externo não carregue ─────────── */
@@ -607,6 +608,31 @@
             ];
         }
 
+        function subscribeToSalesUpdates(callback) {
+            const activeRef = getDatabaseRef('sales/active');
+            const closedRef = getDatabaseRef('sales/closed');
+
+            if (activeRef) {
+                activeRef.on('value', snapshot => {
+                    const dbActive = snapshot.val();
+                    if (dbActive && Array.isArray(dbActive)) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(dbActive));
+                    }
+                    callback();
+                }, handleFirebaseError);
+            }
+
+            if (closedRef) {
+                closedRef.on('value', snapshot => {
+                    const dbClosed = snapshot.val();
+                    if (dbClosed && Array.isArray(dbClosed)) {
+                        localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(dbClosed));
+                    }
+                    callback();
+                }, handleFirebaseError);
+            }
+        }
+
         // ── KPIs ──────────────────────────────────────────────────
         function renderKpis(sales) {
             const totalProfit     = sales.reduce((s, x) => s + x.profit, 0);
@@ -932,6 +958,9 @@
                 window.location.href = './login.html';
                 return;
             }
+            subscribeToSalesUpdates(() => {
+                setTimeout(renderDashboard, 100);
+            });
             // Pequeno delay para skeleton ser visível antes dos dados
             setTimeout(renderDashboard, 300);
             // Fade-in dos elementos estáticos

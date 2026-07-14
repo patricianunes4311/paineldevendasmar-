@@ -32,7 +32,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Variável de altura da navbar ────────────────────────────── */
 :root {
-    --navbar-h: 72px; /* ajuste se a logo mudar de tamanho */
+    --navbar-h: 88px; /* ajuste se a logo ou o menu expandido mudar de tamanho */
 }
 
 /* ── Navbar ──────────────────────────────────────────────────── */
@@ -43,6 +43,7 @@ h1, h2, h3, h4, h5, h6 {
     right: 0;
     width: 100%;
     z-index: 1000;
+    min-height: var(--navbar-h);
     background: rgba(255, 255, 255, 0.94) !important;
     backdrop-filter: blur(18px);
     border-bottom: 1px solid rgba(226, 169, 13, 0.15);
@@ -109,7 +110,6 @@ body {
         linear-gradient(180deg, #fff6fb 0%, #fdf2f7 100%);
     color: #2e1f2d;
     min-height: 100vh;
-    /* FIX: usa variável em vez de valor fixo */
     padding-top: calc(var(--navbar-h) + 1.5rem);
 }
 

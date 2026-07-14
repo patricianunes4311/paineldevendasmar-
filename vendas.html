@@ -11,6 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+    <script defer src="./firebase-db.js"></script>
     <title>Mar.é Semi jóias</title>
 </head>
 
@@ -294,10 +297,14 @@
 
         function saveSales() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+            const ref = getDatabaseRef('sales/active');
+            if (ref) ref.set(sales).catch(handleFirebaseError);
         }
 
         function saveClosedSales(closedSales) {
             localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(closedSales));
+            const ref = getDatabaseRef('sales/closed');
+            if (ref) ref.set(closedSales).catch(handleFirebaseError);
         }
 
         function loadSales() {
@@ -308,6 +315,18 @@
             const stored = localStorage.getItem(STORAGE_KEY);
             sales = stored ? JSON.parse(stored) : [];
             applyFilter();
+
+            const ref = getDatabaseRef('sales/active');
+            if (ref) {
+                ref.on('value', snapshot => {
+                    const dbSales = snapshot.val();
+                    if (dbSales && Array.isArray(dbSales)) {
+                        sales = dbSales;
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+                        applyFilter();
+                    }
+                }, handleFirebaseError);
+            }
         }
 
         function updateSummary() {

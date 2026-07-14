@@ -11,6 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+    <script defer src="./firebase-db.js"></script>
     <title>Histórico de vendas - Mar.é Semi jóias</title>
 </head>
 
@@ -133,6 +136,17 @@
             const stored = localStorage.getItem(CLOSED_STORAGE_KEY);
             const sales = stored ? JSON.parse(stored) : [];
             renderHistory(sales);
+
+            const ref = getDatabaseRef('sales/closed');
+            if (ref) {
+                ref.on('value', snapshot => {
+                    const dbSales = snapshot.val();
+                    if (dbSales && Array.isArray(dbSales)) {
+                        localStorage.setItem(CLOSED_STORAGE_KEY, JSON.stringify(dbSales));
+                        renderHistory(dbSales);
+                    }
+                }, handleFirebaseError);
+            }
         }
 
         function renderHistory(sales) {

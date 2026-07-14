@@ -11,6 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+    <script defer src="./firebase-db.js"></script>
     <title>Login - Mar.é Semi jóias</title>
 </head>
 
@@ -46,7 +49,8 @@
 
     <script>
         const AUTH_KEY = 'mareLoggedIn';
-        const AUTH_PASSWORD = '1234';
+        const authEmail = 'usuario@exemplo.com';
+        const authPassword = '1234';
         const accessPassword = document.getElementById('accessPassword');
         const loginButton = document.getElementById('loginButton');
         const loginError = document.getElementById('loginError');
@@ -62,26 +66,43 @@
 
         function handleLogin() {
             clearLoginError();
-            if (!accessPassword.value.trim()) {
+            const password = accessPassword.value.trim();
+            if (!password) {
                 showLoginError('Digite a senha para continuar.');
                 return;
             }
 
-            if (accessPassword.value === AUTH_PASSWORD) {
-                localStorage.setItem(AUTH_KEY, 'true');
-                window.location.href = './vendas.html';
-            } else {
-                showLoginError('Senha incorreta. Tente novamente.');
-            }
+            signInUser(authEmail, password)
+                .then(() => {
+                    localStorage.setItem(AUTH_KEY, 'true');
+                    window.location.href = './vendas.html';
+                })
+                .catch(error => {
+                    if (error.code === 'auth/wrong-password') {
+                        showLoginError('Senha incorreta. Tente novamente.');
+                    } else if (error.code === 'auth/user-not-found') {
+                        showLoginError('Usuário não encontrado. Verifique as credenciais.');
+                    } else {
+                        showLoginError('Erro ao conectar ao Firebase. Veja o console.');
+                        console.error(error);
+                    }
+                });
         }
 
         loginButton.addEventListener('click', handleLogin);
         accessPassword.addEventListener('input', clearLoginError);
 
         window.addEventListener('load', () => {
-            if (localStorage.getItem(AUTH_KEY)) {
-                window.location.href = './vendas.html';
-            }
+            authStateChanged(user => {
+                if (user) {
+                    localStorage.setItem(AUTH_KEY, 'true');
+                    if (window.location.pathname.endsWith('login.html')) {
+                        window.location.href = './vendas.html';
+                    }
+                } else if (localStorage.getItem(AUTH_KEY)) {
+                    localStorage.removeItem(AUTH_KEY);
+                }
+            });
         });
     </script>
 </body>
